@@ -587,7 +587,9 @@ func (s *sender) splitSeg(seg *segment, size int) {
 	}
 	// Split this segment up.
 	nSeg := seg.clone()
-	nSeg.pkt.Data().AppendRange(seg.pkt.Data().AsRange().SubRange(size))
+	buf := seg.pkt.Data().ToBuffer()
+	buf.TrimFront(int64(size))
+	nSeg.pkt.Data().MergeBuffer(&buf)
 	nSeg.sequenceNumber.UpdateForward(seqnum.Size(size))
 	s.writeList.InsertAfter(seg, nSeg)
 
