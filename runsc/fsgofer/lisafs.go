@@ -854,9 +854,8 @@ func (fd *openFDLisa) Getdent64(count uint32, seek0 bool, recordDirent func(lisa
 		if n <= 0 {
 			break
 		}
-		bytesRead += n
 
-		parseDirents(direntsBuf[:n], func(ino uint64, off int64, ftype uint8, name string) bool {
+		bytesRead += parseDirents(direntsBuf[:n], func(ino uint64, off int64, ftype uint8, name string) bool {
 			dirent := lisafs.Dirent64{
 				Ino:  primitive.Uint64(ino),
 				Off:  primitive.Uint64(off),
@@ -869,7 +868,7 @@ func (fd *openFDLisa) Getdent64(count uint32, seek0 bool, recordDirent func(lisa
 			stat, err := statAt(fd.hostFD, name)
 			if err != nil {
 				log.Warningf("Getdent64: skipping file %q with failed stat, err: %v", path.Join(fd.ControlFD().FD().Node().FilePath(), name), err)
-				return true
+				return false
 			}
 			dirent.DevMinor = primitive.Uint32(unix.Minor(stat.Dev))
 			dirent.DevMajor = primitive.Uint32(unix.Major(stat.Dev))

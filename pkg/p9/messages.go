@@ -1987,9 +1987,6 @@ func (r *Rreaddir) encode(b *buffer) {
 	payloadSize := 0
 	for _, d := range r.Entries {
 		d.encode(&entriesBuf)
-		if len(entriesBuf.data) > int(r.Count) {
-			break
-		}
 		payloadSize = len(entriesBuf.data)
 	}
 	r.Count = uint32(payloadSize)

@@ -83,10 +83,14 @@ func renameat(oldDirFD int, oldName string, newDirFD int, newName string) error 
 	return nil
 }
 
-func parseDirents(buf []byte, handleDirent func(ino uint64, off int64, ftype uint8, name string) bool) {
+func parseDirents(buf []byte, handleDirent func(ino uint64, off int64, ftype uint8, name string) bool) int {
+	var bytesRead int
 	for len(buf) > 0 {
 		// Interpret the buf populated by unix.Getdents as unix.Dirent.
 		dirent := *(*unix.Dirent)(unsafe.Pointer(&buf[0]))
+
+		// Advance buf for the next dirent.
+		buf = buf[dirent.Reclen:]
 
 		// Extracting the name is pretty tedious...
 		var nameBuf [unix.NAME_MAX]byte
@@ -101,12 +105,17 @@ func parseDirents(buf []byte, handleDirent func(ino uint64, off int64, ftype uin
 		}
 		name := string(nameBuf[:nameLen])
 
-		// Deliver results to caller.
-		if !handleDirent(dirent.Ino, dirent.Off, dirent.Type, name) {
-			return
+		// Skip `.` and `..` entries. It is anyways ignored by the client. We also
+		// don't want to leak information about `..`.
+		if name == "." || name == ".." {
+			continue
 		}
 
-		// Advance buf for the next dirent.
-		buf = buf[dirent.Reclen:]
+		// Deliver results to caller.
+		if handleDirent(dirent.Ino, dirent.Off, dirent.Type, name) {
+			// Only count the bytes that are delivered to the caller.
+			bytesRead += int(dirent.Reclen)
+		}
 	}
+	return bytesRead
 }
