@@ -87,6 +87,10 @@ type anonDentry struct {
 	vfsd Dentry
 
 	name string
+
+	// Inotify watches for this inode. Note that anonfs doesn't allow hardlinks
+	// so it is okay to have the watches in the dentry instead of the inode.
+	watches Watches
 }
 
 // Release implements FilesystemImpl.Release.
@@ -312,15 +316,14 @@ func (d *anonDentry) DecRef(ctx context.Context) {
 }
 
 // InotifyWithParent implements DentryImpl.InotifyWithParent.
-//
-// Although Linux technically supports inotify on pseudo filesystems (inotify
-// is implemented at the vfs layer), it is not particularly useful. It is left
-// unimplemented until someone actually needs it.
-func (d *anonDentry) InotifyWithParent(ctx context.Context, events, cookie uint32, et EventType) {}
+func (d *anonDentry) InotifyWithParent(ctx context.Context, events, cookie uint32, et EventType) {
+	// d.parent doesn't exist.
+	d.watches.Notify(ctx, "", events, cookie, et, false /* unlinked */)
+}
 
 // Watches implements DentryImpl.Watches.
 func (d *anonDentry) Watches() *Watches {
-	return nil
+	return &d.watches
 }
 
 // OnZeroWatches implements Dentry.OnZeroWatches.
