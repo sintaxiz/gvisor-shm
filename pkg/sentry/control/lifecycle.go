@@ -290,6 +290,7 @@ func (l *Lifecycle) getInitContainerProcess(containerID string) (*kernel.ThreadG
 type ContainerArgs struct {
 	// ContainerID.
 	ContainerID string `json:"containerID"`
+	Signo       int32  `json:"signo"`
 }
 
 // WaitContainer waits for the container to exit and returns the exit status.
@@ -327,4 +328,12 @@ func (l *Lifecycle) IsContainerRunning(args *ContainerArgs, isRunning *bool) err
 	}
 	*isRunning = true
 	return nil
+}
+
+// SignalContainer signals the container in multi-container mode. It's a noop if the
+// container hasn't started or has exited.
+func (l *Lifecycle) SignalContainer(args *ContainerArgs, _ *struct{}) error {
+	l.Kernel.Pause()
+	defer l.Kernel.Unpause()
+	return l.Kernel.SendContainerSignal(args.ContainerID, &linux.SignalInfo{Signo: args.Signo})
 }
