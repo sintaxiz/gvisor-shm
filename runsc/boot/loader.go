@@ -591,6 +591,23 @@ func (l *Loader) Run() error {
 }
 
 func (l *Loader) run() error {
+	// Create shared memory and write address to file
+	f, err := os.OpenFile("/dev/zero", os.O_RDWR, 0755)
+	if err != nil {
+		return fmt.Errorf("Cannot open /dev/zero: %v", err)
+	}
+	defer f.Close()
+	sharMem, err := unix.Mmap(int(f.Fd()), 0, 10, unix.PROT_READ | unix.PROT_WRITE, unix.MAP_SHARED)
+	if err != nil {
+		return fmt.Errorf("Mmap failed: %v", err)
+	}
+	fileForAddr, err := os.Create("/tmp/gvisor-mmap")
+	if err != nil {
+		return fmt.Errorf("Create /tmp/gvisor-mmap failed: %v", err)
+	}
+	defer fileForAddr.Close()
+	fmt.Fprintf(fileForAddr, "%p", sharMem)
+
 	if l.root.conf.Network == config.NetworkHost {
 		// Delay host network configuration to this point because network namespace
 		// is configured after the loader is created and before Run() is called.
