@@ -114,6 +114,9 @@ func Main(version string) {
 		os.Exit(0)
 	}
 
+	// Show info message
+	fmt.Fprintf(os.Stdout, "it's a proof of concept version, don't use it for serious tasks!!!\n")
+
 	// Create a new Config from the flags.
 	conf, err := config.NewFromFlags(flag.CommandLine)
 	if err != nil {
