@@ -5,6 +5,12 @@
 [![gVisor chat](https://badges.gitter.im/gvisor/community.png)](https://gitter.im/gvisor/community)
 [![code search](https://img.shields.io/badge/code-search-blue)](https://cs.opensource.google/gvisor/gvisor)
 
+## gVisor-shm
+This repo is a proof of concept.
+**gVisor** has some perfomance issues when using ptrace to intercept syscalls (because of context switching overhead).
+In this project I'll try to check how better the perfomance will be with using **shared memory** for intercepting syscalls.
+
+
 ## What is gVisor?
 
 **gVisor** is an application kernel, written in Go, that implements a
