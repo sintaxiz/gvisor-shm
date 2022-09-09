@@ -15,7 +15,9 @@
 // Package boot loads the kernel and runs a container.
 package boot
 
+
 import (
+	
 	"errors"
 	"fmt"
 	mrand "math/rand"
@@ -590,23 +592,25 @@ func (l *Loader) Run() error {
 	return nil
 }
 
+
 func (l *Loader) run() error {
 	// Create shared memory and write address to file
-	f, err := os.OpenFile("/dev/zero", os.O_RDWR, 0755)
+	mem_ptr, err := CreateMemory(1)
+	mem_ptr[0] = 0
 	if err != nil {
-		return fmt.Errorf("Cannot open /dev/zero: %v", err)
+		return fmt.Errorf("Cannot create memory: %v", err)
 	}
-	defer f.Close()
-	sharMem, err := unix.Mmap(int(f.Fd()), 0, 10, unix.PROT_READ | unix.PROT_WRITE, unix.MAP_SHARED)
-	if err != nil {
-		return fmt.Errorf("Mmap failed: %v", err)
-	}
+
 	fileForAddr, err := os.Create("/tmp/gvisor-mmap")
 	if err != nil {
 		return fmt.Errorf("Create /tmp/gvisor-mmap failed: %v", err)
 	}
 	defer fileForAddr.Close()
-	fmt.Fprintf(fileForAddr, "%p", sharMem)
+	
+	fmt.Fprintf(fileForAddr, "%p", mem_ptr)
+	go CheckMemoryContAndQuit(mem_ptr)
+	gtime.Sleep(5 * gtime.Second)
+	mem_ptr[0] = 1
 
 	if l.root.conf.Network == config.NetworkHost {
 		// Delay host network configuration to this point because network namespace
