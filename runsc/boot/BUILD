@@ -7,6 +7,7 @@ package(licenses = [
 ])
 
 go_library(
+    cgo = True,
     name = "boot",
     srcs = [
     "memory_checker.go",
