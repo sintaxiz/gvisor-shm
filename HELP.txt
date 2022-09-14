@@ -1,0 +1,16 @@
+// to build:
+make copy TARGETS=runsc DESTINATION=bin/bundle/
+cd bin/bundle/
+
+// create rootfs for container
+mkdir rootfs
+docker export $(docker create hello-world) | tar -xf - -C rootfs
+
+// create json
+runsc spec -- /hello
+
+// to run:
+sudo ./runsc run hello
+
+// to run with logging enabled:
+sudo ./runsc -debug -debug-log $(pwd)/logs/ run hello

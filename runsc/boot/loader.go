@@ -17,7 +17,8 @@ package boot
 
 
 import (
-	
+	"unsafe"
+
 	"errors"
 	"fmt"
 	mrand "math/rand"
@@ -596,7 +597,7 @@ func (l *Loader) Run() error {
 func (l *Loader) run() error {
 	// Create shared memory and write address to file
 	mem_ptr, err := CreateMemory(1)
-	mem_ptr[0] = 0
+	fmt.Println(*(*int)(unsafe.Pointer(mem_ptr)))
 	if err != nil {
 		return fmt.Errorf("Cannot create memory: %v", err)
 	}
@@ -610,7 +611,7 @@ func (l *Loader) run() error {
 	fmt.Fprintf(fileForAddr, "%p", mem_ptr)
 	go CheckMemoryContAndQuit(mem_ptr)
 	gtime.Sleep(5 * gtime.Second)
-	mem_ptr[0] = 1
+	*(*int)(unsafe.Pointer(mem_ptr)) = 1
 
 	if l.root.conf.Network == config.NetworkHost {
 		// Delay host network configuration to this point because network namespace
