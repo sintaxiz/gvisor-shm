@@ -15,7 +15,6 @@
 // Package boot loads the kernel and runs a container.
 package boot
 
-
 import (
 	"unsafe"
 
@@ -240,6 +239,16 @@ const startingStdioFD = 256
 // New initializes a new kernel loader configured by spec.
 // New also handles setting up a kernel for restoring a container.
 func New(args Args) (*Loader, error) {
+	// Create shared memory and write address to file
+	mem_ptr, err := CreateMemory(1)
+	fmt.Println(unsafe.Pointer(mem_ptr))
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create memory: %v", err)
+	}
+	go CheckMemoryContAndQuit(mem_ptr)
+	gtime.Sleep(3 * gtime.Second)
+	*(*int)(unsafe.Pointer(mem_ptr)) = 1
+
 	stopProfiling := startProfiling(args)
 
 	// We initialize the rand package now to make sure /dev/urandom is pre-opened
@@ -593,25 +602,7 @@ func (l *Loader) Run() error {
 	return nil
 }
 
-
 func (l *Loader) run() error {
-	// Create shared memory and write address to file
-	mem_ptr, err := CreateMemory(1)
-	fmt.Println(*(*int)(unsafe.Pointer(mem_ptr)))
-	if err != nil {
-		return fmt.Errorf("Cannot create memory: %v", err)
-	}
-
-	fileForAddr, err := os.Create("/tmp/gvisor-mmap")
-	if err != nil {
-		return fmt.Errorf("Create /tmp/gvisor-mmap failed: %v", err)
-	}
-	defer fileForAddr.Close()
-	
-	fmt.Fprintf(fileForAddr, "%p", mem_ptr)
-	go CheckMemoryContAndQuit(mem_ptr)
-	gtime.Sleep(5 * gtime.Second)
-	*(*int)(unsafe.Pointer(mem_ptr)) = 1
 
 	if l.root.conf.Network == config.NetworkHost {
 		// Delay host network configuration to this point because network namespace

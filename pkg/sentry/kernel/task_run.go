@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/trace"
+	"unsafe"
 
 	"gvisor.dev/gvisor/pkg/abi/linux"
 	"gvisor.dev/gvisor/pkg/errors/linuxerr"
@@ -79,6 +80,12 @@ func (t *Task) run(threadID uintptr) {
 	// interrupted.
 	t.interruptSelf()
 
+	// Writing pid to shared memory when creating task
+	pid := (int)(threadID)
+	t.Debugf("task pid: %d", pid)
+	addr := uintptr(0x7f45221f7000)
+	*(*int)(unsafe.Pointer(addr)) = pid
+
 	for {
 		// Explanation for this ordering:
 		//
@@ -108,6 +115,7 @@ func (t *Task) run(threadID uintptr) {
 			return
 		}
 	}
+
 }
 
 // doStop is called by Task.run to block until the task is not stopped.
