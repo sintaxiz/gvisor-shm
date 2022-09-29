@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"runtime"
 	"runtime/trace"
-	"unsafe"
 
 	"gvisor.dev/gvisor/pkg/abi/linux"
 	"gvisor.dev/gvisor/pkg/errors/linuxerr"
@@ -79,12 +78,6 @@ func (t *Task) run(threadID uintptr) {
 	// interrupted by saving. In either case, the task is initially
 	// interrupted.
 	t.interruptSelf()
-
-	// Writing pid to shared memory when creating task
-	pid := (int)(threadID)
-	t.Debugf("task pid: %d", pid)
-	addr := uintptr(0x7f45221f7000)
-	*(*int)(unsafe.Pointer(addr)) = pid
 
 	for {
 		// Explanation for this ordering:
@@ -295,6 +288,7 @@ func (app *runApp) execute(t *Task) taskRunState {
 			// region. We should be able to easily identify
 			// vsyscalls by having a <fault><syscall> pair.
 			if at.Execute {
+				// Writing pid to shared memory when creating task
 				if sysno, ok := t.image.st.LookupEmulate(addr); ok {
 					return t.doVsyscall(addr, sysno)
 				}
