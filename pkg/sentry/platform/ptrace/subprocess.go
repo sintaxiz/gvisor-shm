@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"unsafe"
 
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/abi/linux"
@@ -192,12 +191,6 @@ func newSubprocess(create func() (*thread, error)) (*subprocess, error) {
 				// Should not happen: not recoverable.
 				panic(fmt.Sprintf("error initializing first thread: %v", err))
 			}
-
-			// Writing pid to shared memory when creating task
-			pid := (int)(t.tid)
-			log.Debugf("task pid: %d", t.tid)
-			addr := uintptr(0x7f45221f7000)
-			*(*int)(unsafe.Pointer(addr)) = pid
 
 			// Since the new thread was created with
 			// clone(CLONE_PTRACE), it will begin execution with

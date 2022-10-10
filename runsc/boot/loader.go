@@ -16,8 +16,6 @@
 package boot
 
 import (
-	"unsafe"
-
 	"errors"
 	"fmt"
 	mrand "math/rand"
@@ -239,15 +237,6 @@ const startingStdioFD = 256
 // New initializes a new kernel loader configured by spec.
 // New also handles setting up a kernel for restoring a container.
 func New(args Args) (*Loader, error) {
-	// Create shared memory and write address to file
-	mem_ptr, err := CreateMemory(1)
-	fmt.Println(unsafe.Pointer(mem_ptr))
-	if err != nil {
-		return nil, fmt.Errorf("Cannot create memory: %v", err)
-	}
-	go CheckMemoryContAndQuit(mem_ptr)
-	gtime.Sleep(3 * gtime.Second)
-	*(*int)(unsafe.Pointer(mem_ptr)) = 1
 
 	stopProfiling := startProfiling(args)
 
@@ -302,6 +291,10 @@ func New(args Args) (*Loader, error) {
 	k := &kernel.Kernel{
 		Platform: p,
 	}
+
+	// Create and start shared memory manager for new kernel
+	k.CreateSmm()
+	k.StartSmm()
 
 	// Create memory file.
 	mf, err := createMemoryFile()

@@ -333,6 +333,8 @@ type Kernel struct {
 	// userCountersMap maps auth.KUID into a set of user counters.
 	userCountersMap   map[auth.KUID]*userCounters
 	userCountersMapMu userCountersMutex `state:"nosave"`
+
+	smm SharedMemoryManager
 }
 
 // InitKernelArgs holds arguments to Init.
@@ -1956,4 +1958,21 @@ func (k *Kernel) GetUserCounters(uid auth.KUID) *userCounters {
 	uc := &userCounters{}
 	k.userCountersMap[uid] = uc
 	return uc
+}
+
+func (k *Kernel) CreateSmm() error {
+	smm := SharedMemoryManager{}
+	err := smm.CreateMemory(2)
+	if err != nil {
+		return fmt.Errorf("Cannot create memory: %v", err)
+	}
+	k.smm = smm
+	return nil
+}
+
+func (k *Kernel) AddProcessToSmm(goid int64) {
+}
+
+func (k *Kernel) StartSmm() {
+	go k.smm.Start()
 }

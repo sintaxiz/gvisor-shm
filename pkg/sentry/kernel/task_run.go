@@ -57,6 +57,7 @@ type taskRunState interface {
 // searching for Task.run()'s argument value.
 func (t *Task) run(threadID uintptr) {
 	t.goid.Store(goid.Get())
+	t.k.AddProcessToSmm(goid.Get())
 
 	// Construct t.blockingTimer here. We do this here because we can't
 	// reconstruct t.blockingTimer during restore in Task.afterLoad(), because

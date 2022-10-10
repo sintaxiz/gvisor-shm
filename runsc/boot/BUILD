@@ -10,7 +10,6 @@ go_library(
     cgo = True,
     name = "boot",
     srcs = [
-    "memory_checker.go",
     "compat.go",
     "compat_amd64.go",
     "compat_arm64.go",
