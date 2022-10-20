@@ -23,6 +23,7 @@ import (
 	"gvisor.dev/gvisor/pkg/errors/linuxerr"
 	"gvisor.dev/gvisor/pkg/goid"
 	"gvisor.dev/gvisor/pkg/hostarch"
+	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sentry/hostcpu"
 	ktime "gvisor.dev/gvisor/pkg/sentry/kernel/time"
 	"gvisor.dev/gvisor/pkg/sentry/memmap"
@@ -274,6 +275,7 @@ func (app *runApp) execute(t *Task) taskRunState {
 			region := trace.StartRegion(t.traceContext, faultRegion)
 			addr := hostarch.Addr(info.Addr())
 			err := t.MemoryManager().HandleUserFault(t, addr, at, hostarch.Addr(t.Arch().Stack()))
+			log.Debugf("FAULT!")
 			region.End()
 			if err == nil {
 				// The fault was handled appropriately.

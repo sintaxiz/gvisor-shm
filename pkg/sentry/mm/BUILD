@@ -194,7 +194,7 @@ go_library(
         "//pkg/sentry/usage",
         "//pkg/sync",
         "//pkg/sync/locking",
-        "//pkg/usermem",
+        "//pkg/usermem"
     ],
 )
 
