@@ -239,10 +239,12 @@ func newSubprocess(create func() (*thread, error)) (*subprocess, error) {
 //
 // This will panic on failure (which should never happen).
 func (s *subprocess) unmap() {
-	s.Unmap(0, uint64(stubStart))
-	if maximumUserAddress != stubEnd {
-		s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
-	}
+	// 0x7f45221f7000
+	log.Debugf("stubStart=%x", stubStart)
+	//s.Unmap(0, uint64(0x7f45221f6000))
+	// if maximumUserAddress != stubEnd {
+	// 	s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
+	// }
 }
 
 // Release kills the subprocess.
@@ -627,6 +629,7 @@ func (s *subprocess) syscall(sysno uintptr, args ...arch.SyscallArgument) (uintp
 
 // MapFile implements platform.AddressSpace.MapFile.
 func (s *subprocess) MapFile(addr hostarch.Addr, f memmap.File, fr memmap.FileRange, at hostarch.AccessType, precommit bool) error {
+	log.Debugf("ptrace mapping file")
 	var flags int
 	if precommit {
 		flags |= unix.MAP_POPULATE

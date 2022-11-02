@@ -196,7 +196,6 @@ proto_library(
 go_library(
     name = "kernel",
     srcs = [
-        "memory_checker.go",
         "abstract_socket_namespace.go",
         "aio.go",
         "cgroup.go",

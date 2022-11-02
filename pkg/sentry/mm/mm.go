@@ -246,6 +246,9 @@ type MemoryManager struct {
 	// membarrierRSeqEnabled is non-zero if EnableMembarrierRSeq has previously
 	// been called.
 	membarrierRSeqEnabled atomicbitops.Uint32
+
+	// manager to create, start, add new process to shared memory process
+	smm SharedMemoryManager
 }
 
 // vma represents a virtual memory area.

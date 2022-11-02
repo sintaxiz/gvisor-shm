@@ -141,6 +141,7 @@ go_template_instance(
 go_library(
     name = "mm",
     srcs = [
+        "memory_checker.go",
         "active_mutex.go",
         "address_space.go",
         "aio_context.go",
@@ -194,7 +195,8 @@ go_library(
         "//pkg/sentry/usage",
         "//pkg/sync",
         "//pkg/sync/locking",
-        "//pkg/usermem"
+        "//pkg/usermem",
+        "//pkg/memutil"
     ],
 )
 

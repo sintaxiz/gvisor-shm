@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"runtime/trace"
-	"unsafe"
 
 	"golang.org/x/sys/unix"
 	"gvisor.dev/gvisor/pkg/abi/linux"
@@ -26,7 +25,6 @@ import (
 	"gvisor.dev/gvisor/pkg/errors"
 	"gvisor.dev/gvisor/pkg/errors/linuxerr"
 	"gvisor.dev/gvisor/pkg/hostarch"
-	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/marshal"
 	"gvisor.dev/gvisor/pkg/metric"
 	"gvisor.dev/gvisor/pkg/sentry/arch"
@@ -228,11 +226,13 @@ func (t *Task) doSyscall() taskRunState {
 	sysno := t.Arch().SyscallNo()
 	args := t.Arch().SyscallArgs()
 
+
+	// todo: suppose adding new process?
 	//pid := (int)(t.tid)
-	log.Debugf("task pid: %d", t.ThreadGroup().ID())
-	addr_for_pid := uintptr(0x7f45221f7000)
-	*(*int)(unsafe.Pointer(addr_for_pid + unsafe.Sizeof(int(0)))) = (int)(sysno)
-	*(*int)(unsafe.Pointer(addr_for_pid)) = (int)(t.ThreadGroup().ID())
+	// log.Debugf("task pid: %d", t.ThreadGroup().ID())
+	// addr_for_pid := uintptr(0x7f45221f7000)
+	// *(*int)(unsafe.Pointer(addr_for_pid + unsafe.Sizeof(int(0)))) = (int)(sysno)
+	// *(*int)(unsafe.Pointer(addr_for_pid)) = (int)(t.ThreadGroup().ID())
 
 	// Tracers expect to see this between when the task traps into the kernel
 	// to perform a syscall and when the syscall is actually invoked.

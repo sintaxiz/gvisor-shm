@@ -39,6 +39,7 @@ func NewMemoryManager(p platform.Platform, mfp pgalloc.MemoryFileProvider, sleep
 		dumpability:        atomicbitops.FromInt32(int32(UserDumpable)),
 		aioManager:         aioManager{contexts: make(map[uint64]*AIOContext)},
 		sleepForActivation: sleepForActivation,
+		smm:                SharedMemoryManager{isOn: false},
 	}
 }
 

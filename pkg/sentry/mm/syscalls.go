@@ -24,13 +24,12 @@ import (
 	"gvisor.dev/gvisor/pkg/errors/linuxerr"
 	"gvisor.dev/gvisor/pkg/hostarch"
 	"gvisor.dev/gvisor/pkg/log"
+	"gvisor.dev/gvisor/pkg/safemem"
 	"gvisor.dev/gvisor/pkg/sentry/kernel/auth"
 	"gvisor.dev/gvisor/pkg/sentry/kernel/futex"
 	"gvisor.dev/gvisor/pkg/sentry/limits"
 	"gvisor.dev/gvisor/pkg/sentry/memmap"
-	"gvisor.dev/gvisor/pkg/safemem"
 )
-
 
 // shmFile implements memmap.File.
 type shmFile struct {
@@ -41,6 +40,7 @@ type shmFile struct {
 func (s shmFile) IncRef(fr memmap.FileRange) {
 	return
 }
+
 // DecRef implements memmap.File.DecRef.
 func (s shmFile) DecRef(fr memmap.FileRange) {
 	return
@@ -56,7 +56,6 @@ func (s shmFile) FD() int {
 	return s.fd
 }
 
-
 // HandleUserFault handles an application page fault. sp is the faulting
 // application thread's stack pointer.
 //
@@ -64,17 +63,27 @@ func (s shmFile) FD() int {
 func (mm *MemoryManager) HandleUserFault(ctx context.Context, addr hostarch.Addr, at hostarch.AccessType, sp hostarch.Addr) error {
 	ar, ok := addr.RoundDown().ToRange(hostarch.PageSize)
 	log.Debugf("addr=%x", addr)
-	if uintptr(addr) == uintptr(0x7f45221f7000) {
-		log.Debugf("Going map 0x7f45221f7000 to file.")
-		mm.activeMu.Lock()
-		perms := hostarch.AccessType{true, true, false}
-		fileRange := memmap.FileRange{0, 0x04}
-		shmf := shmFile{-666}
 
-		err := mm.as.MapFile(addr, shmf, fileRange, perms, false)
-		mm.activeMu.RUnlock()
-		return err
-	}
+	// if uintptr(addr) == uintptr(0x7f45221f7000) {
+	// 	log.Debugf("Going map 0x7f45221f7000 to file.")
+	// 	if !mm.smm.isOn {
+	// 		log.Debugf("Going to create memory.")
+	// 		mm.smm.CreateMemory(4)
+	// 		log.Debugf("Successfuly create memory")
+	// 		go mm.smm.Start()
+	// 		log.Debugf("Successfuly start smm")
+	// 	}
+	// 	log.Debugf("Going to lock")
+	// 	mm.activeMu.Lock()
+	// 	perms := hostarch.AccessType{true, true, false}
+	// 	fileRange := memmap.FileRange{0, 0x04}
+	// 	shmf := shmFile{mm.smm.memfd}
+
+	// 	err := mm.as.MapFile(addr, shmf, fileRange, perms, false)
+	// 	mm.activeMu.RUnlock()
+	// 	log.Debugf("Successfully map 0x7f45221f7000 to file.")
+	// 	return err
+	// }
 
 	if !ok {
 		return linuxerr.EFAULT

@@ -292,10 +292,6 @@ func New(args Args) (*Loader, error) {
 		Platform: p,
 	}
 
-	// Create and start shared memory manager for new kernel
-	k.CreateSmm()
-	k.StartSmm()
-
 	// Create memory file.
 	mf, err := createMemoryFile()
 	if err != nil {
