@@ -288,7 +288,7 @@ func New(args Args) (*Loader, error) {
 	//k.StartSmm()
 
 	new_smm := kernel.SharedMemoryManager{}
-	err := new_smm.CreateMemory(2)
+	err := new_smm.CreateMemory(20)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot create memory: %v", err)
 	}

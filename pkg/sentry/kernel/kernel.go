@@ -1862,6 +1862,7 @@ func (k *Kernel) Release() {
 	k.timekeeper.Destroy()
 	k.vdso.Release(ctx)
 	k.RootNetworkNamespace().DecRef()
+	k.Smm.Destroy()
 }
 
 // PopulateNewCgroupHierarchy moves all tasks into a newly created cgroup

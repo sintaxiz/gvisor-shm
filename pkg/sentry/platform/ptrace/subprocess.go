@@ -243,10 +243,10 @@ func (s *subprocess) unmap() {
 	log.Debugf("stubStart=%x", stubStart)
 	log.Debugf("stubEnd=%x", stubEnd)
 	s.Unmap(0, uint64(0x7f4000000000))
-	//s.Unmap(uintptr(0x7f5000000000), uint64(stubStart))
-	// if maximumUserAddress != stubEnd {
-	// 	s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
-	// }
+	s.Unmap(hostarch.Addr(0x7f5000000000), uint64(stubStart - 0x7f5000000000))
+	if maximumUserAddress != stubEnd {
+		s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
+	}
 }
 
 // Release kills the subprocess.

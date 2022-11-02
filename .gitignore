@@ -8,4 +8,6 @@
 # Generate webhook admission.
 /test/kubernetes/gvisor-injection-admission-webhook.yaml
 
-bin/
+bin/logs
+bin/runsc
+bin/rootfs
