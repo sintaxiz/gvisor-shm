@@ -283,6 +283,16 @@ func New(args Args) (*Loader, error) {
 		info.goferFDs = append(info.goferFDs, fd.New(goferFD))
 	}
 
+	// Create and start shared memory manager for new kernel
+	//k.CreateSmm()
+	//k.StartSmm()
+
+	new_smm := kernel.SharedMemoryManager{}
+	err := new_smm.CreateMemory(2)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot create memory: %v", err)
+	}
+
 	// Create kernel and platform.
 	p, err := createPlatform(args.Conf, args.Device)
 	if err != nil {
@@ -290,10 +300,8 @@ func New(args Args) (*Loader, error) {
 	}
 	k := &kernel.Kernel{
 		Platform: p,
+		Smm:      new_smm,
 	}
-
-	// Create and start shared memory manager for new kernel
-	k.CreateSmm()
 	k.StartSmm()
 
 	// Create memory file.
