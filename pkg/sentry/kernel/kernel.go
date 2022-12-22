@@ -1962,12 +1962,12 @@ func (k *Kernel) GetUserCounters(uid auth.KUID) *userCounters {
 }
 
 func (k *Kernel) CreateSmm() error {
-	// smm := SharedMemoryManager{}
-	// err := smm.CreateMemory(2)
-	// if err != nil {
-	// 	return fmt.Errorf("Cannot create memory: %v", err)
-	// }
-	// k.smm = smm
+	smm := SharedMemoryManager{}
+	err := smm.CreateMemory(2)
+	if err != nil {
+		return fmt.Errorf("Cannot create memory: %v", err)
+	}
+	k.Smm = smm
 	return nil
 }
 

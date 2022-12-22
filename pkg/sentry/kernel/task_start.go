@@ -23,6 +23,7 @@ import (
 	"gvisor.dev/gvisor/pkg/context"
 	"gvisor.dev/gvisor/pkg/errors/linuxerr"
 	"gvisor.dev/gvisor/pkg/hostarch"
+	"gvisor.dev/gvisor/pkg/log"
 	"gvisor.dev/gvisor/pkg/sentry/inet"
 	"gvisor.dev/gvisor/pkg/sentry/kernel/auth"
 	"gvisor.dev/gvisor/pkg/sentry/kernel/futex"
@@ -354,6 +355,8 @@ func (ns *PIDNamespace) allocateTID() (ThreadID, error) {
 // debugging purposes only (set as parameter to Task.run to make it visible
 // in stack dumps).
 func (t *Task) Start(tid ThreadID) {
+	log.Infof("Start Task tid= %d", tid)
+	t.k.Smm.AddProcess(int(tid))
 	// If the task was restored, it may be "starting" after having already exited.
 	if t.runState == nil {
 		return
@@ -368,4 +371,5 @@ func (t *Task) Start(tid ThreadID) {
 
 	// Use the task's TID in the root PID namespace to make it visible in stack dumps.
 	go t.run(uintptr(tid)) // S/R-SAFE: synchronizes with saving through stops
+	t.k.Smm.AfterAddingProcess(int(tid))
 }
