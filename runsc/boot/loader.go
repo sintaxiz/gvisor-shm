@@ -302,7 +302,6 @@ func New(args Args) (*Loader, error) {
 		Platform: p,
 		Smm:      new_smm,
 	}
-	k.StartSmm()
 
 	// Create memory file.
 	mf, err := createMemoryFile()
@@ -467,6 +466,8 @@ func New(args Args) (*Loader, error) {
 	if err := ctrl.srv.StartServing(); err != nil {
 		return nil, fmt.Errorf("starting control server: %w", err)
 	}
+
+	k.StartSmm()
 
 	return l, nil
 }
