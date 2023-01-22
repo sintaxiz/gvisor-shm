@@ -6,7 +6,7 @@ import (
 )
 
 func write_to_shm_mem() {
-	addr := uintptr(0x7f45221f7000)
+	addr := uintptr(0x7f45221f6000)
 	//*(*int)(unsafe.Pointer(addr + unsafe.Sizeof(int(0)))) = 666
 	*(*int)(unsafe.Pointer(addr)) = 666
 	for !(*(*int)(unsafe.Pointer(addr)) == 0) {
