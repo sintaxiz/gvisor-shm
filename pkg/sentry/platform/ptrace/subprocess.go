@@ -240,20 +240,20 @@ func newSubprocess(create func() (*thread, error)) (*subprocess, error) {
 // This will panic on failure (which should never happen).
 func (s *subprocess) unmap() {
 
-	s.Unmap(0, uint64(stubStart))
-	if maximumUserAddress != stubEnd {
-		s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
-	}
-
-	// // 0x7f45221f7000
-	// log.Debugf("stubStart=%x", stubStart)
-	// log.Debugf("stubEnd=%x", stubEnd)
-	// s.Unmap(0, uint64(0x7f4000000000))
-	// s.Unmap(hostarch.Addr(0x7f5000000000), uint64(stubStart-0x7f5000000000))
-	// s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
+	// s.Unmap(0, uint64(stubStart))
 	// if maximumUserAddress != stubEnd {
 	// 	s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
 	// }
+
+	// 0x7f45221f7000
+	log.Debugf("stubStart=%x", stubStart)
+	log.Debugf("stubEnd=%x", stubEnd)
+	s.Unmap(0, uint64(0x7f4000000000))
+	s.Unmap(hostarch.Addr(0x7f5000000000), uint64(stubStart-0x7f5000000000))
+	s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
+	if maximumUserAddress != stubEnd {
+		s.Unmap(hostarch.Addr(stubEnd), uint64(maximumUserAddress-stubEnd))
+	}
 }
 
 // Release kills the subprocess.

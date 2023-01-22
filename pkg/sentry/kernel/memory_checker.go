@@ -21,9 +21,9 @@ const (
 	SizePerProcess = 1
 
 	// memory pointers
-	InitAddress      = 0x7f45221f6000
-	InitFreeAddress  = 0x7f45221f7100
-	PidMemoryAddress = 0x7f45221f7000
+	InitAddress      = 0x7f45221f7000
+	InitFreeAddress  = 0x7f45221f8000
+	PidMemoryAddress = 0x7f45221f6000
 
 	// mremap syscall constants
 	MREMAP_FIXED   = 0x2
@@ -46,6 +46,7 @@ func (smm *SharedMemoryManager) Start() {
 			// fmt.Println("pid: %d", *(*int)(unsafe.Pointer(smm.shmMem)))
 			// *(*int)(unsafe.Pointer(smm.shmMem + unsafe.Sizeof(int(0)))) = 1337
 			// *(*int)(unsafe.Pointer(smm.shmMem)) = 0
+
 			smm.setResult(TestResult)
 			smm.endCommunication()
 		}
@@ -92,7 +93,7 @@ func (smm *SharedMemoryManager) AfterAddingProcess(pid int) {
 	// new_addr := smm.createAddr(pid)
 	addr := smm.currentFreeAddress
 	log.Debugf("Current free address: %x", addr)
-	smm.currentFreeAddress = smm.currentFreeAddress + 0x100
+	smm.currentFreeAddress = smm.currentFreeAddress + 0x1000
 
 	new_addr_ptr, _, err := mremap(addr)
 	if err != 0 {
@@ -137,6 +138,7 @@ func mremap(addr uint64) (new_addr_ptr, r2 uintptr, err syscall.Errno) {
 	new_size := SizePerProcess
 	flags := MREMAP_MAYMOVE | MREMAP_FIXED
 	new_addr := addr
+	log.Debugf("parameters for mremap: %x, %x, %d, %d, %d", old_addr, new_addr, old_size, new_size, flags)
 	return syscall.Syscall6(syscall.SYS_MREMAP, uintptr(old_addr), uintptr(old_size), uintptr(new_size), uintptr(flags), uintptr(new_addr), uintptr(0x0))
 }
 
