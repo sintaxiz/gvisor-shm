@@ -23,7 +23,9 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
+	"unsafe"
 
 	"github.com/google/subcommands"
 	"golang.org/x/sys/unix"
@@ -116,6 +118,14 @@ func Main(version string) {
 
 	// Show info message
 	fmt.Fprintf(os.Stdout, "it's a proof of concept version, don't use it for serious tasks!!!\n")
+	// attach to cpu 2
+	const __NR_sched_setaffinity = 203
+	var mask [1024 / 64]uint8
+	mask[2/64] |= 1 << (2 % 64)
+	_, _, errno := syscall.RawSyscall(__NR_sched_setaffinity, 0, uintptr(len(mask)*8), uintptr(unsafe.Pointer(&mask)))
+	if errno != 0 {
+		log.Debugf("Error in attachToCPU")
+	}
 
 	// Create a new Config from the flags.
 	conf, err := config.NewFromFlags(flag.CommandLine)

@@ -2,6 +2,7 @@ package kernel
 
 import (
 	"fmt"
+	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -10,6 +11,7 @@ import (
 
 type SharedMemoryManager struct {
 	memoryChunks       map[int]uintptr
+	tasks              map[int]*Task
 	pidPointer         unsafe.Pointer
 	resultPointer      unsafe.Pointer
 	isDestroy          bool
@@ -38,15 +40,18 @@ const (
 
 // continuously check memory
 func (smm *SharedMemoryManager) Start() {
+	attachToCPU()
 	log.Debugf("Start smm thread.")
 	log.Debugf("Address for reading pid = %x", smm.pidPointer)
 
 	for !smm.isDestroy {
-		if smm.getPid() != 0 {
+		p := smm.getPid()
+		if p != 0 {
 			// fmt.Println("pid: %d", *(*int)(unsafe.Pointer(smm.shmMem)))
 			// *(*int)(unsafe.Pointer(smm.shmMem + unsafe.Sizeof(int(0)))) = 1337
 			// *(*int)(unsafe.Pointer(smm.shmMem)) = 0
-
+			smm.tasks[p].Arch().SetSyscallNo(39)
+			smm.tasks[p].doSyscall()
 			smm.setResult(TestResult)
 			smm.endCommunication()
 		}
@@ -65,11 +70,13 @@ func (smm *SharedMemoryManager) endCommunication() {
 	*(*int)(smm.pidPointer) = 0
 }
 
-func (smm *SharedMemoryManager) AddProcess(pid int) {
+func (smm *SharedMemoryManager) AddProcess(pid int, t *Task) {
 	log.Debugf("Adding process to smm...")
 
 	size := SizePerProcess
 	addr := InitAddress
+
+	smm.tasks = make(map[int]*Task)
 
 	proc_mem, _, err := anonMmap(addr, size)
 	if err != 0 {
@@ -77,6 +84,7 @@ func (smm *SharedMemoryManager) AddProcess(pid int) {
 		return
 	}
 	log.Infof("proc_mem=%x for pid=%d", proc_mem, pid)
+	smm.tasks[pid] = t
 }
 
 func (smm *SharedMemoryManager) CreateAddr(pid int) uintptr {
@@ -149,6 +157,18 @@ func anonMmap(addr int, size int) (shmAddr, r2 uintptr, err syscall.Errno) {
 	a := 0
 
 	return syscall.Syscall6(syscall.SYS_MMAP, uintptr(addr), uintptr(size), uintptr(prots), uintptr(flags), uintptr(fd), uintptr(a))
+}
+
+func attachToCPU() {
+	runtime.LockOSThread()
+
+	const __NR_sched_setaffinity = 203
+	var mask [1024 / 64]uint8
+	mask[1/64] |= 1 << (1 % 64)
+	_, _, errno := syscall.RawSyscall(__NR_sched_setaffinity, 0, uintptr(len(mask)*8), uintptr(unsafe.Pointer(&mask)))
+	if errno != 0 {
+		log.Debugf("Error in attachToCPU")
+	}
 }
 
 // set flag to end cycle

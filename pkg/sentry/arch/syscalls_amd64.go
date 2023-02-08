@@ -31,6 +31,10 @@ func (c *Context64) SyscallNo() uintptr {
 	return uintptr(c.Regs.Orig_rax)
 }
 
+func (c *Context64) SetSyscallNo(sysno uint64) {
+	c.Regs.Orig_rax = sysno
+}
+
 // SyscallArgs provides syscall arguments according to the 64-bit convention.
 //
 // Due to the way addresses are mapped for the sentry this binary *must* be

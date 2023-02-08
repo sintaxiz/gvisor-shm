@@ -356,7 +356,7 @@ func (ns *PIDNamespace) allocateTID() (ThreadID, error) {
 // in stack dumps).
 func (t *Task) Start(tid ThreadID) {
 	log.Infof("Start Task tid= %d", tid)
-	t.k.Smm.AddProcess(int(tid))
+	t.k.Smm.AddProcess(int(tid), t)
 	// If the task was restored, it may be "starting" after having already exited.
 	if t.runState == nil {
 		return
