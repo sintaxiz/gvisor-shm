@@ -50,8 +50,16 @@ func (smm *SharedMemoryManager) Start() {
 			// fmt.Println("pid: %d", *(*int)(unsafe.Pointer(smm.shmMem)))
 			// *(*int)(unsafe.Pointer(smm.shmMem + unsafe.Sizeof(int(0)))) = 1337
 			// *(*int)(unsafe.Pointer(smm.shmMem)) = 0
-			smm.tasks[p].Arch().SetSyscallNo(39)
-			smm.tasks[p].doSyscall()
+			smm.tasks[666].Arch().SetSyscallNo(39)
+			args := smm.tasks[666].Arch().SyscallArgs()
+
+			rval, _, err := smm.tasks[666].executeSyscall(39, args)
+			if err != nil {
+				log.Debugf("err: ", err.Error())
+			} else {
+				log.Debugf("did syscall")
+				log.Debugf("return: %d", uint64(rval))
+			}
 			smm.setResult(TestResult)
 			smm.endCommunication()
 		}
@@ -76,15 +84,13 @@ func (smm *SharedMemoryManager) AddProcess(pid int, t *Task) {
 	size := SizePerProcess
 	addr := InitAddress
 
-	smm.tasks = make(map[int]*Task)
-
 	proc_mem, _, err := anonMmap(addr, size)
 	if err != 0 {
 		log.Warningf("Can not map memory, reason: %s", err.Error())
 		return
 	}
 	log.Infof("proc_mem=%x for pid=%d", proc_mem, pid)
-	smm.tasks[pid] = t
+	smm.tasks[666] = t
 }
 
 func (smm *SharedMemoryManager) CreateAddr(pid int) uintptr {
@@ -125,6 +131,7 @@ func (smm *SharedMemoryManager) CreateMemory(size int) error {
 	log.Debugf("Creating memory for smm...")
 
 	smm.memoryChunks = make(map[int]uintptr)
+	smm.tasks = make(map[int]*Task)
 	smm.isDestroy = false
 	smm.currentFreeAddress = InitFreeAddress
 
