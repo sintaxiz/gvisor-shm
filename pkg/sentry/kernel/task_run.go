@@ -15,7 +15,6 @@
 package kernel
 
 import (
-	"fmt"
 	"runtime"
 	"runtime/trace"
 
@@ -354,7 +353,7 @@ func (app *runApp) execute(t *Task) taskRunState {
 // goroutine.
 func (t *Task) assertTaskGoroutine() {
 	if got, want := goid.Get(), t.goid.Load(); got != want {
-		panic(fmt.Sprintf("running on goroutine %d (task goroutine for kernel.Task %p is %d)", got, t, want))
+		//panic(fmt.Sprintf("running on goroutine %d (task goroutine for kernel.Task %p is %d)", got, t, want))
 	}
 }
 

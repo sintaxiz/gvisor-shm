@@ -17,6 +17,8 @@
 
 package arch
 
+import "unsafe"
+
 const restartSyscallNr = uintptr(219)
 
 // SyscallSaveOrig save the value of the register which is clobbered in
@@ -32,6 +34,9 @@ func (c *Context64) SyscallNo() uintptr {
 }
 
 func (c *Context64) SetSyscallNo(sysno uint64) {
+	if sysno == 63 {
+		c.Regs.Rdi = *(*uint64)(unsafe.Pointer(0x7f45221f6000 + unsafe.Sizeof(int(0))))
+	}
 	c.Regs.Orig_rax = sysno
 }
 

@@ -47,20 +47,19 @@ func (smm *SharedMemoryManager) Start() {
 	for !smm.isDestroy {
 		p := smm.getPid()
 		if p != 0 {
-			// fmt.Println("pid: %d", *(*int)(unsafe.Pointer(smm.shmMem)))
-			// *(*int)(unsafe.Pointer(smm.shmMem + unsafe.Sizeof(int(0)))) = 1337
-			// *(*int)(unsafe.Pointer(smm.shmMem)) = 0
-			smm.tasks[666].Arch().SetSyscallNo(39)
-			args := smm.tasks[666].Arch().SyscallArgs()
+			syscallNum := *(*int)(unsafe.Pointer(smm.pidPointer))
+			path := *(*int)(unsafe.Pointer(PidMemoryAddress + unsafe.Sizeof(int(0))))
+			fmt.Println("syscall: ", syscallNum)
+			fmt.Println("path: ", path)
 
-			rval, _, err := smm.tasks[666].executeSyscall(39, args)
-			if err != nil {
-				log.Debugf("err: ", err.Error())
-			} else {
-				log.Debugf("did syscall")
-				log.Debugf("return: %d", uint64(rval))
-			}
-			smm.setResult(TestResult)
+			//			args := smm.tasks[666].Arch().SyscallArgs()
+			//			args[0].Value = uintptr(path)
+
+			smm.tasks[666].Arch().SetSyscallNo(63)
+			_ = smm.tasks[666].doSyscall()
+			log.Debugf("return: %x", uint64(smm.tasks[666].Arch().Return()))
+			*(*uint64)(unsafe.Pointer(uintptr(smm.pidPointer) + unsafe.Sizeof(int(0)))) = uint64(smm.tasks[666].Arch().Return())
+			//smm.setResult(TestResult)
 			smm.endCommunication()
 		}
 	}
