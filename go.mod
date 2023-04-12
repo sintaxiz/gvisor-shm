@@ -40,9 +40,14 @@ require (
 	github.com/Microsoft/hcsshim v0.8.14 // indirect
 	github.com/containerd/continuity v0.2.1 // indirect
 	github.com/containerd/ttrpc v1.0.2 // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/docker v20.10.23+incompatible
+	github.com/docker/go-connections v0.4.0
+	github.com/godbus/dbus/v5 v5.0.4
 	github.com/google/go-cmp v0.5.6
 	github.com/googleapis/gnostic v0.4.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.0.0-rc90 // indirect
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
 	go.opencensus.io v0.23.0 // indirect

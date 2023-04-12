@@ -45,22 +45,35 @@ func (smm *SharedMemoryManager) Start() {
 	log.Debugf("Address for reading pid = %x", smm.pidPointer)
 
 	for !smm.isDestroy {
+		//time.Sleep(1 * time.Second)
 		p := smm.getPid()
 		if p != 0 {
 			syscallNum := *(*int)(unsafe.Pointer(smm.pidPointer))
-			path := *(*int)(unsafe.Pointer(PidMemoryAddress + unsafe.Sizeof(int(0))))
-			fmt.Println("syscall: ", syscallNum)
-			fmt.Println("path: ", path)
-
+			if p == 666 {
+				syscallNum = 0
+			}
+			//path := *(*int)(unsafe.Pointer(PidMemoryAddress + unsafe.Sizeof(int(0))))
+			//fmt.Println("syscall: ", syscallNum)
+			//fmt.Println("path: ", path)
 			//			args := smm.tasks[666].Arch().SyscallArgs()
 			//			args[0].Value = uintptr(path)
+			log.Debugf("return before syscall: %x", uint64(smm.tasks[666].Arch().Return()))
 
-			smm.tasks[666].Arch().SetSyscallNo(63)
-			_ = smm.tasks[666].doSyscall()
-			log.Debugf("return: %x", uint64(smm.tasks[666].Arch().Return()))
+			smm.tasks[666].Arch().SetSyscallNo(uint64(syscallNum))
+			//	smm.tasks[666].runState = TaskGoroutineRunningSys
+			// smm.tasks[666].accountTaskGoroutineEnter(TaskGoroutineRunningApp)
+			// smm.tasks[666].accountTaskGoroutineLeave(TaskGoroutineRunningApp)
+			smm.tasks[666].completeSleep()
+
+			smm.tasks[666].runState = smm.tasks[666].doSyscall()
+			smm.tasks[666].prepareSleep()
+			log.Debugf("return after syscall: %x", uint64(smm.tasks[666].Arch().Return()))
 			*(*uint64)(unsafe.Pointer(uintptr(smm.pidPointer) + unsafe.Sizeof(int(0)))) = uint64(smm.tasks[666].Arch().Return())
 			//smm.setResult(TestResult)
 			smm.endCommunication()
+
+			//sbpr := smm.tasks[666].MemoryManager().AddressSpace().(*platform.subprocess)
+
 		}
 	}
 }
@@ -90,6 +103,7 @@ func (smm *SharedMemoryManager) AddProcess(pid int, t *Task) {
 	}
 	log.Infof("proc_mem=%x for pid=%d", proc_mem, pid)
 	smm.tasks[666] = t
+
 }
 
 func (smm *SharedMemoryManager) CreateAddr(pid int) uintptr {

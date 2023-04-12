@@ -11,3 +11,6 @@
 bin/logs
 bin/runsc
 bin/rootfs
+
+debug/runsc
+debug/logs
