@@ -26,6 +26,7 @@ const (
 	InitAddress      = 0x7f45221f7000
 	InitFreeAddress  = 0x7f45221f8000
 	PidMemoryAddress = 0x7f45221f6000
+	ElfAddr          = 0x7f49221f6000
 
 	// mremap syscall constants
 	MREMAP_FIXED   = 0x2
@@ -103,7 +104,6 @@ func (smm *SharedMemoryManager) AddProcess(pid int, t *Task) {
 	}
 	log.Infof("proc_mem=%x for pid=%d", proc_mem, pid)
 	smm.tasks[666] = t
-
 }
 
 func (smm *SharedMemoryManager) CreateAddr(pid int) uintptr {
@@ -157,6 +157,21 @@ func (smm *SharedMemoryManager) CreateMemory(size int) error {
 	}
 	smm.pidPointer = unsafe.Pointer(shmAddr)
 	smm.resultPointer = unsafe.Pointer(shmAddr + unsafe.Sizeof(int(0)))
+
+	fd, err2 := syscall.Open("/tmp/func", syscall.O_RDONLY, 0777)
+	if err2 != nil {
+		log.Debugf("Can not open file for smm, reason: %s", err2)
+		return err2
+	}
+	log.Debugf("Fd: %d", fd)
+
+	elf_mem, _, err := mmapElf(ElfAddr, fd)
+	if err != 0 {
+		log.Warningf("Can not map elf, reason: %s", err.Error())
+		return nil
+	}
+	log.Debugf("Proc mem: %x", elf_mem)
+
 	return nil
 }
 
@@ -168,6 +183,15 @@ func mremap(addr uint64) (new_addr_ptr, r2 uintptr, err syscall.Errno) {
 	new_addr := addr
 	log.Debugf("parameters for mremap: %x, %x, %d, %d, %d", old_addr, new_addr, old_size, new_size, flags)
 	return syscall.Syscall6(syscall.SYS_MREMAP, uintptr(old_addr), uintptr(old_size), uintptr(new_size), uintptr(flags), uintptr(new_addr), uintptr(0x0))
+}
+
+func mmapElf(addr int, fd int) (elfAddr, r2 uintptr, err syscall.Errno) {
+	prots := syscall.PROT_READ | syscall.PROT_EXEC
+	flags := syscall.MAP_SHARED | syscall.MAP_FIXED
+	a := 0
+	size := 4096
+
+	return syscall.Syscall6(syscall.SYS_MMAP, uintptr(addr), uintptr(size), uintptr(prots), uintptr(flags), uintptr(fd), uintptr(a))
 }
 
 func anonMmap(addr int, size int) (shmAddr, r2 uintptr, err syscall.Errno) {

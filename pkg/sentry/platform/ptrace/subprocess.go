@@ -232,6 +232,22 @@ func newSubprocess(create func() (*thread, error)) (*subprocess, error) {
 	}
 
 	sp.unmap()
+
+	// mmap executable handler
+	res, err := sp.syscall(
+		unix.SYS_GETPID,
+		arch.SyscallArgument{Value: uintptr(0)},
+		arch.SyscallArgument{Value: uintptr(0)},
+		arch.SyscallArgument{Value: uintptr(0)},
+		arch.SyscallArgument{Value: uintptr(0)},
+		arch.SyscallArgument{Value: uintptr(0)},
+		arch.SyscallArgument{Value: uintptr(0)})
+	if err != nil {
+		log.Debugf("ERROR=%s", err)
+	} else {
+		log.Debugf("RESULT=%d", res)
+	}
+
 	return sp, nil
 }
 
