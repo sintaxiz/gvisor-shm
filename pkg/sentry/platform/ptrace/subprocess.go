@@ -235,13 +235,12 @@ func newSubprocess(create func() (*thread, error)) (*subprocess, error) {
 
 	// mmap executable handler
 	res, err := sp.syscall(
-		unix.SYS_GETPID,
+		unix.SYS_PRCTL,
+		arch.SyscallArgument{Value: uintptr(59)},
+		arch.SyscallArgument{Value: uintptr(2)},
 		arch.SyscallArgument{Value: uintptr(0)},
 		arch.SyscallArgument{Value: uintptr(0)},
-		arch.SyscallArgument{Value: uintptr(0)},
-		arch.SyscallArgument{Value: uintptr(0)},
-		arch.SyscallArgument{Value: uintptr(0)},
-		arch.SyscallArgument{Value: uintptr(0)})
+		arch.SyscallArgument{Value: uintptr(0x7f45221f9000)})
 	if err != nil {
 		log.Debugf("ERROR=%s", err)
 	} else {

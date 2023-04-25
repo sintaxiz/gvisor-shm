@@ -97,9 +97,7 @@ func attachedThread(flags uintptr, defaultAction linux.BPFAction) (*thread, erro
 				unix.SYS_EXIT:  {},
 
 				// For the stub prctl dance (all).
-				unix.SYS_PRCTL: []seccomp.Rule{
-					{seccomp.EqualTo(unix.PR_SET_PDEATHSIG), seccomp.EqualTo(unix.SIGKILL)},
-				},
+				unix.SYS_PRCTL: {},
 				unix.SYS_GETPPID: {},
 
 				// For the stub to stop itself (all).
