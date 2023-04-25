@@ -35,10 +35,8 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"syscall"
 	"time"
-	"unsafe"
-
+	
 	"gvisor.dev/gvisor/pkg/abi/linux"
 	"gvisor.dev/gvisor/pkg/atomicbitops"
 	"gvisor.dev/gvisor/pkg/cleanup"
@@ -1977,17 +1975,6 @@ func (k *Kernel) AddProcessToSmm(goid int64) {
 }
 
 func (k *Kernel) StartSmm() {
-	aattachToCPU()
-
 	go k.Smm.Start()
 }
 
-func aattachToCPU() {
-	const __NR_sched_setaffinity = 203
-	var mask [1024 / 64]uint8
-	mask[1/64] |= 1 << (1 % 64)
-	_, _, errno := syscall.RawSyscall(__NR_sched_setaffinity, 0, uintptr(len(mask)*8), uintptr(unsafe.Pointer(&mask)))
-	if errno != 0 {
-		log.Debugf("Error in attachToCPU")
-	}
-}
