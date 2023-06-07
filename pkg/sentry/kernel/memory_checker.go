@@ -39,7 +39,20 @@ const (
 
 	// for debugging
 	TestResult = 1337
+
+	KernelIdForSmm = 0
+
+	SupportedSyscalls = []int{
+		4, // stat
+		5, // fstat
+		6, // lstat
+		7, // poll
+		8, // lseek
+		39 // getpid
+	}
 )
+
+func spinlock()
 
 // continuously check memory
 func (smm *SharedMemoryManager) Start() error {
@@ -47,37 +60,26 @@ func (smm *SharedMemoryManager) Start() error {
 	log.Debugf("Start smm thread.")
 	log.Debugf("Address for reading pid = %x", smm.pidPointer)
 
-	for !smm.isDestroy {
-		//time.Sleep(1 * time.Second)
+	for {
 		p := smm.getPid()
 		if p != 0 {
 			syscallNum := *(*int)(unsafe.Pointer(smm.pidPointer))
-			if p == 666 {
-				syscallNum = 0
+			if !isSupportedSyscall(syscallNum) {
+				failToPtrace();
 			}
-			//path := *(*int)(unsafe.Pointer(PidMemoryAddress + unsafe.Sizeof(int(0))))
-			//fmt.Println("syscall: ", syscallNum)
-			//fmt.Println("path: ", path)
-			//			args := smm.tasks[666].Arch().SyscallArgs()
-			//			args[0].Value = uintptr(path)
-			log.Debugf("return before syscall: %x", uint64(smm.tasks[666].Arch().Return()))
+			log.Debugf("return before syscall: %x", uint64(smm.tasks[p].Arch().Return()))
 
-			smm.tasks[666].Arch().SetSyscallNo(uint64(syscallNum))
-			//	smm.tasks[666].runState = TaskGoroutineRunningSys
-			// smm.tasks[666].accountTaskGoroutineEnter(TaskGoroutineRunningApp)
-			// smm.tasks[666].accountTaskGoroutineLeave(TaskGoroutineRunningApp)
-			smm.tasks[666].completeSleep()
+			smm.tasks[p].Arch().SetSyscallNo(uint64(syscallNum))
+			smm.tasks[p].completeSleep()
 
-			smm.tasks[666].runState = smm.tasks[666].doSyscall()
-			smm.tasks[666].prepareSleep()
-			log.Debugf("return after syscall: %x", uint64(smm.tasks[666].Arch().Return()))
-			*(*uint64)(unsafe.Pointer(uintptr(smm.pidPointer) + unsafe.Sizeof(int(0)))) = uint64(smm.tasks[666].Arch().Return())
-			//smm.setResult(TestResult)
+			smm.tasks[p].runState = smm.tasks[p].doSyscall()
+			smm.tasks[p].prepareSleep()
+			log.Debugf("return after syscall: %x", uint64(smm.tasks[p].Arch().Return()))
+			smm.setResult(uint64(smm.tasks[666].Arch().Return())
 			smm.endCommunication()
 
-			//sbpr := smm.tasks[666].MemoryManager().AddressSpace().(*platform.subprocess)
-
 		}
+		spinlock()
 	}
 	return nil
 }
@@ -165,9 +167,9 @@ func (smm *SharedMemoryManager) CreateMemory(size int) error {
 		return err
 	}
 	log.Debugf("Selector addr: %x", selectorAddr)
-	*(*int)(unsafe.Pointer(uintptr(selectorAddr))) = 1
+	*(*int)(unsafe.Pointer(uintptr(selectorAddr))) = 0
 
-	fd, err2 := syscall.Open("/tmp/func", syscall.O_RDONLY, 0777)
+	fd, err2 := syscall.Open("/tmp/syscalldispatcher.o", syscall.O_RDONLY, 0777)
 	if err2 != nil {
 		log.Debugf("Can not open file for smm, reason: %s", err2)
 		return err2
@@ -179,17 +181,18 @@ func (smm *SharedMemoryManager) CreateMemory(size int) error {
 		log.Warningf("Can not map elf, reason: %s", err.Error())
 		return nil
 	}
-	log.Debugf("Proc mem: %x", elf_mem)
+	log.Debugf("Proc mem for elf file: %x", elf_mem)
 
 	return nil
 }
 
 func (smm *SharedMemoryManager) getPid() int {
 	return *(*int)(smm.pidPointer)
+	//return spinlock(PidMemoryAddress)
 }
 
-func (smm *SharedMemoryManager) setResult(res int) {
-	*(*int)(smm.resultPointer) = TestResult
+func (smm *SharedMemoryManager) setResult(res uint64) {
+	*(*uint64)(unsafe.Pointer(uintptr(smm.pidPointer) + unsafe.Sizeof(int(0)))) = res
 }
 
 func (smm *SharedMemoryManager) endCommunication() {
@@ -210,7 +213,7 @@ func mmapElf(addr int, fd int) (elfAddr, r2 uintptr, err syscall.Errno) {
 	prots := syscall.PROT_READ | syscall.PROT_EXEC
 	flags := syscall.MAP_SHARED | syscall.MAP_FIXED
 	a := 0
-	size := 4096
+	size := 0x3fa0
 
 	return syscall.Syscall6(syscall.SYS_MMAP, uintptr(addr), uintptr(size), uintptr(prots), uintptr(flags), uintptr(fd), uintptr(a))
 }
@@ -228,7 +231,7 @@ func attachToCPU() {
 	runtime.LockOSThread()
 
 	var mask unix.CPUSet
-	mask.Set(0x01)
+	mask.Set(KernelIdForSmm)
 	err := unix.SchedSetaffinity(0, &mask)
 	if err != nil {
 		log.Debugf("Error in attachToCPU in SMM")
@@ -241,4 +244,17 @@ func attachToCPU() {
 	// if errno != 0 {
 	// 	log.Debugf("Error in attachToCPU")
 	// }
+}
+
+func isSupportedSyscall(sysno int) bool {
+	for i := range SupportedSyscalls {
+		if sysno == i {
+			return true
+		}
+	}
+	return false
+}
+
+func failToPtrace() {
+	*(*int)(unsafe.Pointer(uintptr(SelectorAddress))) = 1
 }
